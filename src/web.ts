@@ -15,10 +15,10 @@ export class testPermissionIosWeb
     const output = true;
     return output;
   }
-  async showEnableLocationAlert(options: { value: string; }):Promise<void>  {
-    console.log('showEnableLocationAlert', options);
-    // return options;
-  }
+  // async showEnableLocationAlert(options: { value: string; }):Promise<void>  {
+  //   console.log('showEnableLocationAlert', options);
+  //   // return options;
+  // }
   async requestPermissions():Promise<void>{
     console.log("requestPermissions() from .ts customPlugin")
   }

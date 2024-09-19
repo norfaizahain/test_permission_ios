@@ -20,7 +20,7 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "echo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isGpsEnabled", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "showEnableLocationAlert", returnType: CAPPluginReturnPromise),
+        // CAPPluginMethod(name: "showEnableLocationAlert", returnType: CAPPluginReturnPromise),
         // CAPPluginMethod(name: "addListener", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestPermissions", returnType: CAPPluginReturnPromise),
     ]
@@ -54,18 +54,24 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
          }
     }
     @objc public override func requestPermissions(_ call: CAPPluginCall) {
-        print("hi im requesting")
+        print("hey you")
         if let manager: CLLocationManager = locationManager, CLLocationManager.locationServicesEnabled() {
+            print(CLLocationManager.authorizationStatus())
             if CLLocationManager.authorizationStatus() == .notDetermined {
                 bridge?.saveCall(call)
                 permissionCallID = call.callbackId
                 manager.requestWhenInUseAuthorization()
+                // call.resolve()
             } else {
-                checkPermissions(call)
+                 checkPermissions(call)
+        
             }
         } else {
-            call.reject("Location services are disabled")
+            showEnableLocationAlert("main")
+            // call.reject("Location services are disabled")
         }
+        
+
     }
     @objc public override func checkPermissions(_ call: CAPPluginCall) {
         print("check permission helo")
@@ -76,46 +82,55 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
             locationState = "prompt"
         case .restricted, .denied:
             locationState = "denied"
-            showEnableLocationAlert()
+            self.showEnableLocationAlert("app")
         case .authorizedAlways, .authorizedWhenInUse:
             locationState = "granted"
         @unknown default:
             locationState = "prompt"
         }
 
-        call.resolve(["location": locationState])
-          self.notifyListeners("locationStatusChange", data: [
-            "data": locationState
-        ])
-    }
-    func showEnableLocationAlert() {
-        let status = call.getString("value") ?? ""
-        if(status == "denied"){
-              DispatchQueue.main.async {
-                let alert = UIAlertController(
-                    title: "Location Services Disabled",
-                    message: "Please enable location services in Settings to allow the app to access your location.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
-                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(settingsUrl)
-                    }
-                })
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel)
-                    { _ in
-                    notifyCancelAction()
-                })
-            
-            self.bridge?.viewController?.present(alert, animated: true)
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            print("Delay finished, notifying listener")
+            self.notifyListeners("locationStatusChange", data: [
+                "data": locationState
+            ])
         }
-         call.resolve()
+        // call.resolve(["location": locationState])
+        
+    }
+    func showEnableLocationAlert(_ type : String) {
+        print("kau triggered tak?")
+        var url = URL(string: UIApplication.openSettingsURLString)
+//        call.getString("value") ?? ""
+        if(type == "main"){
+            url = URL(string: "App-Prefs:root=LOCATION_SERVICES")
+        }
+       
+        DispatchQueue.main.async {
+        let alert = UIAlertController(
+            title: "Location Services Disabled",
+            message: "Please enable location services in Settings to allow the app to access your location.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            if let settingsUrl = url {
+                UIApplication.shared.open(settingsUrl)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel)
+            { _ in
+            self.notifyCancelAction()
+        })
+        
+        self.bridge?.viewController?.present(alert, animated: true)
+        }
+        
+        //  call.resolve()
 
     }
     
     func notifyCancelAction() {
-        self.notifyListeners("cancelAction", data: ["data":""])
+        self.notifyListeners("cancelAction", data: ["data":"true"])
     }
     // custom addListener
     // private var touchEventListeners: [String: (PluginCallResultData) -> Void] = [:]

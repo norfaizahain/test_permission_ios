@@ -15,7 +15,6 @@ npx cap sync
 
 * [`echo(...)`](#echo)
 * [`isGpsEnabled()`](#isgpsenabled)
-* [`showEnableLocationAlert(...)`](#showenablelocationalert)
 * [`requestPermissions()`](#requestpermissions)
 * [`addListener('cancelAction' | 'locationStatusChange', ...)`](#addlistenercancelaction--locationstatuschange-)
 * [Interfaces](#interfaces)
@@ -48,19 +47,6 @@ isGpsEnabled() => Promise<GpsIsEnabled>
 ```
 
 **Returns:** <code>Promise&lt;true&gt;</code>
-
---------------------
-
-
-### showEnableLocationAlert(...)
-
-```typescript
-showEnableLocationAlert(options: { value: string; }) => Promise<void>
-```
-
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
 
 --------------------
 
