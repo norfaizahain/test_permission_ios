@@ -63,11 +63,15 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
                 manager.requestWhenInUseAuthorization()
                 // call.resolve()
             } else {
-                 checkPermissions(call)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // Delay before checking permissions
+                self.checkPermissions(call)
+            }
         
             }
         } else {
-            showEnableLocationAlert("main")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // Delay before showing alert
+            self.showEnableLocationAlert("main")
+        }
             // call.reject("Location services are disabled")
         }
         
@@ -89,12 +93,12 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
             locationState = "prompt"
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-            print("Delay finished, notifying listener")
-            self.notifyListeners("locationStatusChange", data: [
-                "data": locationState
-            ])
-        }
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+        //     print("Delay finished, notifying listener")
+        //     self.notifyListeners("locationStatusChange", data: [
+        //         "data": locationState
+        //     ])
+        // }
         // call.resolve(["location": locationState])
         
     }
@@ -117,9 +121,15 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
                 UIApplication.shared.open(settingsUrl)
             }
         })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel)
-            { _ in
-            self.notifyCancelAction()
+        // alert.addAction(UIAlertAction(title: "Cancel", style: .cancel)
+        //     { _ in
+        //     self.notifyCancelAction()
+        // })
+         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {  // 0.5-second delay before notifying cancel
+                print("Notifying cancel action after delay")
+                self.notifyCancelAction()
+            }
         })
         
         self.bridge?.viewController?.present(alert, animated: true)
@@ -130,6 +140,7 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
     }
     
     func notifyCancelAction() {
+        print("bruh triggered now")
         self.notifyListeners("cancelAction", data: ["data":"true"])
     }
     // custom addListener
