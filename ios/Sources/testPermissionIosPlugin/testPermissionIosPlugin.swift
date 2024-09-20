@@ -78,42 +78,57 @@ public class TestPermissionIosPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMan
 
     }
     @objc public override func checkPermissions(_ call: CAPPluginCall) {
-        print("check permission helo")
-        let locationState: String
+       print("check permission for iOS location")
 
-        switch CLLocationManager.authorizationStatus() {
+        let locationState: String
+        let authorizationStatus = CLLocationManager.authorizationStatus() // Use this to get the general authorization status
+
+        switch authorizationStatus {
         case .notDetermined:
             locationState = "prompt"
         case .restricted, .denied:
             locationState = "denied"
             self.showEnableLocationAlert("app")
         case .authorizedAlways, .authorizedWhenInUse:
-            locationState = "granted"
+            // Initialize CLLocationManager to check accuracy authorization
+            let locationManager = CLLocationManager()
+
+            // Check for accuracy authorization if on iOS 14+
+            if #available(iOS 14.0, *) {
+                if locationManager.accuracyAuthorization == .fullAccuracy {
+                    locationState = "granted"  // Precise location is enabled
+                    print("Precise location is enabled")
+                } else {
+                    locationState = "reducedAccuracy"  // Precise location is disabled
+                    print("Precise location is disabled")
+                    self.showEnableLocationAlert("preciseLocation")
+                }
+            } else {
+                // For iOS versions below 14, just assume location is granted
+                locationState = "granted"
+            }
         @unknown default:
             locationState = "prompt"
         }
 
-        // DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-        //     print("Delay finished, notifying listener")
-        //     self.notifyListeners("locationStatusChange", data: [
-        //         "data": locationState
-        //     ])
-        // }
-        // call.resolve(["location": locationState])
         
     }
     func showEnableLocationAlert(_ type : String) {
         print("kau triggered tak?")
-        var url = URL(string: UIApplication.openSettingsURLString)
+        var url = URL(string: UIApplication.openSettingsURLString);
+        var textMessage = "Please enable location services in Settings to allow the app to access your location."
 //        call.getString("value") ?? ""
         if(type == "main"){
             url = URL(string: "App-Prefs:root=LOCATION_SERVICES")
+        }
+        if(type == "preciseLocation"){
+            textMessage = "Please enable the 'Precise Location' services in location Settings to allow the app to access your location accurately."
         }
        
         DispatchQueue.main.async {
         let alert = UIAlertController(
             title: "Location Services Disabled",
-            message: "Please enable location services in Settings to allow the app to access your location.",
+            message: textMessage,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
